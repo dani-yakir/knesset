@@ -12,6 +12,7 @@ os.makedirs(scrap_data_dir, exist_ok=True)
 
 OPEN_SITE_CMD = 'start chrome --incognito "https://main.knesset.gov.il/Activity/plenum/Votes/Pages/default.aspx"'
 CONNECTION_SLEEP = 30
+CONNECTION_RETRIES = 10
 KNESSET_API_BASE_URL = 'https://knesset.gov.il/WebSiteApi/knessetapi/Votes/'
 CMB = 'GetVotesCmbData'
 CMB_URL = KNESSET_API_BASE_URL + CMB
@@ -52,7 +53,16 @@ class VoteData:
 
 def pull_json_to_file(url: str, filename: str) -> dict:
     # Make a GET request to an API that returns JSON
-    response = requests.get(url)
+    response_gotten = False
+    for i in range(CONNECTION_RETRIES):
+        try:
+            response = requests.get(url)
+            response_gotten = True
+        except requests.exceptions.ConnectTimeout:
+            print(f'Timeout, sleeping for {CONNECTION_SLEEP} seconds...')
+            time.sleep(CONNECTION_SLEEP)
+    if not response_gotten:
+        raise Exception(f'Connection not established: {url}')
     # Check if the request was successful
     if response.status_code == 200:
         data = response.json()  # Parse JSON response into a Python dictionary
@@ -61,7 +71,7 @@ def pull_json_to_file(url: str, filename: str) -> dict:
             return data
     else:
         raise Exception(f"{url} GET request failed with status code: {response.status_code}")
-    time.sleep(random.uniform(0.1, 0.2))
+    time.sleep(random.uniform(0.2, 0.3))
 
 def get_vote_details(id: int) -> VoteData:
     url = VOTE_DETAILS_URL + str(id)
