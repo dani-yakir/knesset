@@ -1,6 +1,8 @@
 import requests
 import json
 import os
+import time
+import random
 
 filedir = os.path.dirname(os.path.abspath(__file__))
 scrap_data_dir = os.path.join(filedir, 'scrap_data')
@@ -11,6 +13,31 @@ KNESSET_API_BASE_URL = 'https://knesset.gov.il/WebSiteApi/knessetapi/Votes/'
 CMB = 'GetVotesCmbData'
 CMB_URL = KNESSET_API_BASE_URL + CMB
 CMB_JSON_FILENAME = os.path.join(scrap_data_dir, CMB +  '.json')
+
+VOTE_DETAILS = 'GetVoteDetails/'
+VOTE_DETAILS_URL = KNESSET_API_BASE_URL + VOTE_DETAILS
+
+KNOWN_VOTE = 44096
+
+class VoteData:
+    def __init__(self, raw_data: dict):
+        self._raw_data = raw_data
+
+    @property
+    def next(self):
+        return self._raw_data['NextAndPrevVotes'][0]['NextVote']
+
+    @property
+    def prev(self):
+        return self._raw_data['NextAndPrevVotes'][0]['PrevVote']
+
+    @property
+    def title(self):
+        if (len(self._raw_data['VoteHeader'])):
+            return self._raw_data['VoteHeader'][0]['ItemTitle']
+        else:
+            return 'No title'
+
 
 def pull_json_to_file(url: str, filename: str) -> dict:
     # Make a GET request to an API that returns JSON
@@ -23,11 +50,38 @@ def pull_json_to_file(url: str, filename: str) -> dict:
             return data
     else:
         raise Exception(f"{url} GET request failed with status code: {response.status_code}")
+    time.sleep(random.uniform(0.5, 1.0))
 
+def get_vote_details(id: int) -> VoteData:
+    url = VOTE_DETAILS_URL + str(id)
+    filename = os.path.join(scrap_data_dir, str(id) + '.json')
+    return VoteData(pull_json_to_file(url, filename))
 
 def main():
-    # 
+    # get CMB metadata first
     pull_json_to_file(CMB_URL, CMB_JSON_FILENAME)
+
+
+    known_vote_data = get_vote_details(KNOWN_VOTE) 
+    print(f'got known vote data {known_vote_data.title}. prev: {known_vote_data.prev}, next: {known_vote_data.next}')
+
+    # get all votes from known to first
+    current_vote_data = known_vote_data
+
+    print(f'getting votes in descending order...')
+    while (current_vote_data.prev):
+        current_vote_data = get_vote_details(current_vote_data.prev)
+        print(f'got vote data {current_vote_data.title}. prev: {current_vote_data.prev}')
+
+    # get all votes from known to most recent
+    current_vote_data = known_vote_data
+    print(f'getting votes in ascending order...')
+    while (current_vote_data.next):
+        current_vote_data = get_vote_details(current_vote_data.next)
+        print(f'got vote data {current_vote_data.title}. next: {current_vote_data.next}')
+    
+
+    
     
 
 if __name__ == '__main__':
