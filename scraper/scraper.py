@@ -40,6 +40,14 @@ class VoteData:
             return self._raw_data['VoteHeader'][0]['ItemTitle']
         else:
             return 'No title'
+        
+
+    @property
+    def date(self):
+        if (len(self._raw_data['VoteHeader'])):
+            return self._raw_data['VoteHeader'][0]['VoteDate']
+        else:
+            return 'No Date'
 
 
 def pull_json_to_file(url: str, filename: str) -> dict:
@@ -71,7 +79,7 @@ def main():
 
     print('Got CMB, getting a known vote...')
     known_vote_data = get_vote_details(KNOWN_VOTE) 
-    print(f'got known vote data {known_vote_data.title}. prev: {known_vote_data.prev}, next: {known_vote_data.next}')
+    print(f'got known vote data {known_vote_data.date}. prev: {known_vote_data.prev}, next: {known_vote_data.next}')
 
     # get all votes from known to first
     current_vote_data = known_vote_data
@@ -79,14 +87,14 @@ def main():
     print(f'getting votes in descending order...')
     while (current_vote_data.prev):
         current_vote_data = get_vote_details(current_vote_data.prev)
-        print(f'got vote data {current_vote_data.title}. prev: {current_vote_data.prev}')
+        print(f'got vote data {current_vote_data.date}. prev: {current_vote_data.prev}')
 
     # get all votes from known to most recent
     current_vote_data = known_vote_data
     print(f'getting votes in ascending order...')
     while (current_vote_data.next):
         current_vote_data = get_vote_details(current_vote_data.next)
-        print(f'got vote data {current_vote_data.title}. next: {current_vote_data.next}')
+        print(f'got vote data {current_vote_data.date}. next: {current_vote_data.next}')
     
 
     
