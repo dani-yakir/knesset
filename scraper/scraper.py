@@ -9,6 +9,9 @@ scrap_data_dir = os.path.join(filedir, 'scrap_data')
 # TODO - maybe move to main
 os.makedirs(scrap_data_dir, exist_ok=True)
 
+
+OPEN_SITE_CMD = 'start chrome --incognito "https://main.knesset.gov.il/Activity/plenum/Votes/Pages/default.aspx"'
+CONNECTION_SLEEP = 30
 KNESSET_API_BASE_URL = 'https://knesset.gov.il/WebSiteApi/knessetapi/Votes/'
 CMB = 'GetVotesCmbData'
 CMB_URL = KNESSET_API_BASE_URL + CMB
@@ -50,7 +53,7 @@ def pull_json_to_file(url: str, filename: str) -> dict:
             return data
     else:
         raise Exception(f"{url} GET request failed with status code: {response.status_code}")
-    time.sleep(random.uniform(0.5, 1.0))
+    time.sleep(random.uniform(0.1, 0.2))
 
 def get_vote_details(id: int) -> VoteData:
     url = VOTE_DETAILS_URL + str(id)
@@ -58,10 +61,15 @@ def get_vote_details(id: int) -> VoteData:
     return VoteData(pull_json_to_file(url, filename))
 
 def main():
+    print('Setting up connection...')
+    os.system(OPEN_SITE_CMD)
+    print(f'sleeping for {CONNECTION_SLEEP} seconds...')
+    time.sleep(CONNECTION_SLEEP)
+    print('Getting CMB data...')
     # get CMB metadata first
     pull_json_to_file(CMB_URL, CMB_JSON_FILENAME)
 
-
+    print('Got CMB, getting a known vote...')
     known_vote_data = get_vote_details(KNOWN_VOTE) 
     print(f'got known vote data {known_vote_data.title}. prev: {known_vote_data.prev}, next: {known_vote_data.next}')
 
