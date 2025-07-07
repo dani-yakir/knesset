@@ -58,7 +58,7 @@ def pull_json_to_file(url: str, filename: str) -> dict:
         try:
             response = requests.get(url)
             response_gotten = True
-        except requests.exceptions.ConnectTimeout:
+        except Exception:
             print(f'Timeout, sleeping for {CONNECTION_SLEEP} seconds...')
             time.sleep(CONNECTION_SLEEP)
     if not response_gotten:
@@ -71,7 +71,7 @@ def pull_json_to_file(url: str, filename: str) -> dict:
             return data
     else:
         raise Exception(f"{url} GET request failed with status code: {response.status_code}")
-    time.sleep(random.uniform(0.2, 0.3))
+    time.sleep(random.uniform(0.1, 0.2))
 
 def get_vote_details(id: int) -> VoteData:
     url = VOTE_DETAILS_URL + str(id)
