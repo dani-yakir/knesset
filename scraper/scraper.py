@@ -49,7 +49,7 @@ def pull_json_to_file(url: str, filename: str) -> dict:
     if response.status_code == 200:
         data = response.json()  # Parse JSON response into a Python dictionary
         with open(filename, 'w') as f:
-            f.write(json.dumps(data, indent=4))
+            f.write(json.dumps(data, indent=4, ensure_ascii=False))
             return data
     else:
         raise Exception(f"{url} GET request failed with status code: {response.status_code}")
