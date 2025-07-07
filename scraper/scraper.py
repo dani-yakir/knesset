@@ -48,7 +48,7 @@ def pull_json_to_file(url: str, filename: str) -> dict:
     # Check if the request was successful
     if response.status_code == 200:
         data = response.json()  # Parse JSON response into a Python dictionary
-        with open(filename, 'w') as f:
+        with open(filename, 'w', encoding="utf-8") as f:
             f.write(json.dumps(data, indent=4, ensure_ascii=False))
             return data
     else:
