@@ -11,7 +11,7 @@ os.makedirs(scrap_data_dir, exist_ok=True)
 
 
 OPEN_SITE_CMD = 'start chrome --incognito "https://main.knesset.gov.il/Activity/plenum/Votes/Pages/default.aspx"'
-CONNECTION_SLEEP = 30
+CONNECTION_SLEEP = 10
 CONNECTION_RETRIES = 10
 KNESSET_API_BASE_URL = 'https://knesset.gov.il/WebSiteApi/knessetapi/Votes/'
 CMB = 'GetVotesCmbData'
@@ -41,7 +41,6 @@ class VoteData:
             return self._raw_data['VoteHeader'][0]['ItemTitle']
         else:
             return 'No title'
-        
 
     @property
     def date(self):
@@ -49,6 +48,28 @@ class VoteData:
             return self._raw_data['VoteHeader'][0]['VoteDate']
         else:
             return 'No Date'
+
+
+def get_earliest_unscraped_vote_id(known_vote: int) -> int:
+    # get the earliest vote we need to scrape
+    current_vote_id = known_vote
+    while os.path.exists(vote_path := os.path.join(scrap_data_dir, str(current_vote_id) + '.json')):
+        with open(vote_path, 'r', encoding="utf-8") as f:
+            print(f'found vote: {vote_path}')
+            vote_data = VoteData(json.load(f))
+            current_vote_id = vote_data.prev
+    return current_vote_id
+
+            
+def get_latest_unscraped_vote_id(known_vote: int) -> int:
+    # get the earliest vote we need to scrape
+    current_vote_id = known_vote
+    while os.path.exists(vote_path := os.path.join(scrap_data_dir, str(current_vote_id) + '.json')):
+        with open(vote_path, 'r', encoding="utf-8") as f:
+            print(f'found vote: {vote_path}')
+            vote_data = VoteData(json.load(f))
+            current_vote_id = vote_data.next
+    return current_vote_id            
 
 
 def pull_json_to_file(url: str, filename: str) -> dict:
@@ -79,6 +100,10 @@ def get_vote_details(id: int) -> VoteData:
     return VoteData(pull_json_to_file(url, filename))
 
 def main():
+    print('getting earliest and latest unknown vote...')
+    earliest_unknown_vote_id = get_earliest_unscraped_vote_id(KNOWN_VOTE)
+    latest_unknown_vote_id = get_latest_unscraped_vote_id(KNOWN_VOTE)
+    print(f'tail: {earliest_unknown_vote_id}, head: {latest_unknown_vote_id}')
     print('Setting up connection...')
     os.system(OPEN_SITE_CMD)
     print(f'sleeping for {CONNECTION_SLEEP} seconds...')
@@ -88,23 +113,22 @@ def main():
     pull_json_to_file(CMB_URL, CMB_JSON_FILENAME)
 
     print('Got CMB, getting a known vote...')
-    known_vote_data = get_vote_details(KNOWN_VOTE) 
-    print(f'got known vote data {known_vote_data.date}. prev: {known_vote_data.prev}, next: {known_vote_data.next}')
-
     # get all votes from known to first
-    current_vote_data = known_vote_data
+    current_vote_data = None
 
     print(f'getting votes in descending order...')
-    while (current_vote_data.prev):
-        current_vote_data = get_vote_details(current_vote_data.prev)
+    while (earliest_unknown_vote_id):
+        current_vote_data = get_vote_details(earliest_unknown_vote_id)
         print(f'got vote data {current_vote_data.date}. prev: {current_vote_data.prev}')
+        earliest_unknown_vote_id = current_vote_data.prev
 
     # get all votes from known to most recent
-    current_vote_data = known_vote_data
+    current_vote_data = None
     print(f'getting votes in ascending order...')
-    while (current_vote_data.next):
-        current_vote_data = get_vote_details(current_vote_data.next)
+    while (latest_unknown_vote_id):
+        current_vote_data = get_vote_details(latest_unknown_vote_id)
         print(f'got vote data {current_vote_data.date}. next: {current_vote_data.next}')
+        latest_unknown_vote_id = current_vote_data.next
     
 
     
