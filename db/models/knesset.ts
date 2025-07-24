@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryColumn } from 'typeorm';
+import { Entity, Column, PrimaryColumn, OneToMany } from 'typeorm';
+import { Faction } from './faction';
 
 
 @Entity()
@@ -17,4 +18,7 @@ export class Knesset {
     
     @Column()
     is_current: boolean
+
+    @OneToMany(()=>Faction, (faction)=>{faction.knesset})
+    factions: Faction
 }
