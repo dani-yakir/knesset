@@ -1,5 +1,6 @@
-import { Entity, Column, PrimaryColumn, ManyToOne} from 'typeorm';
+import { Entity, Column, PrimaryColumn, ManyToOne, ManyToMany} from 'typeorm';
 import { Knesset } from './knesset';
+import { Mk } from './mk';
 
 
 @Entity()
@@ -12,4 +13,7 @@ export class Faction {
 
     @ManyToOne(() => Knesset, (knesset) => knesset.factions)
     knesset: Knesset
+
+    @ManyToMany(()=>Mk, (mk)=>mk.factions)
+    mks: Mk[]
 }
