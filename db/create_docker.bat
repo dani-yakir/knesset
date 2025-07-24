@@ -1,0 +1,1 @@
+docker run --name pg-kapi -e POSTGRES_USER=kapi -e POSTGRES_PASSWORD=kapi -e POSTGRES_DB=kapi -p 5432:5432 -d postgres
