@@ -1,3 +1,3 @@
 scrap_data
 node_modules
-db/*.js
+db/**/*.js
