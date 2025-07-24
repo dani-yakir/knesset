@@ -1,0 +1,20 @@
+import { Entity, Column, PrimaryColumn } from 'typeorm';
+
+
+@Entity()
+export class Knesset {
+    @PrimaryColumn()
+    id: number
+
+    @Column()
+    name: string
+
+    @Column()
+    start_date: string
+
+    @Column({ type: 'date', nullable: true })
+    end_date: string | null
+    
+    @Column()
+    is_current: boolean
+}
