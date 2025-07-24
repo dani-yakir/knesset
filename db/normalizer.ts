@@ -1,0 +1,1 @@
+import cmbData from "../scraper/scrap_data/GetVotesCmbData.json"

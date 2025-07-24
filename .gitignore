@@ -1,2 +1,3 @@
-*.json
+scrap_data
 node_modules
+db/*.js
