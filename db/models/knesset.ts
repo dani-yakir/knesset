@@ -20,5 +20,5 @@ export class Knesset {
     is_current: boolean
 
     @OneToMany(()=>Faction, (faction)=>{faction.knesset})
-    factions: Faction
+    factions: Faction[];
 }
