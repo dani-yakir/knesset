@@ -16,4 +16,21 @@ const AppDataSource = new DataSource({
     logging: false,
 })
 
-AppDataSource.initialize()
+AppDataSource.initialize().then(()=>{
+    // normalize Knessets
+    const cmbKnessets = cmbData.Knessets;
+    const knessetRepo =  AppDataSource.getRepository(Knesset);
+
+    for (let cmbKnesset of cmbKnessets) {
+        const knesset = new Knesset();
+        knesset.id = cmbKnesset.KnessetId;
+        knesset.is_current = Boolean(cmbKnesset.IsCurrent);
+        knesset.name = cmbKnesset.KnessetName;
+        knesset.end_date = cmbKnesset.KnessetEnd;
+        knesset.start_date = cmbKnesset.KnessetStart;
+        knessetRepo.save(knesset);
+        console.log(`saved knesset ${knesset.id}`)
+    }
+
+
+})
