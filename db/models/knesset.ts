@@ -9,7 +9,7 @@ export class Knesset {
     @Column()
     name: string
 
-    @Column()
+    @Column({ type: 'date', nullable: true})
     start_date: string
 
     @Column({ type: 'date', nullable: true })
