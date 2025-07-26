@@ -3,6 +3,7 @@ import { DataSource, In } from "typeorm"
 import { Knesset } from "./models/knesset"
 import { Faction } from "./models/faction"
 import { Mk } from "./models/mk"
+import { VoteResultType } from "./models/vote_result_type"
 import cmbData from "../scraper/scrap_data/GetVotesCmbData.json"
 
 
@@ -13,7 +14,7 @@ const AppDataSource = new DataSource({
     username: "kapi",
     password: "kapi",
     database: "kapi",
-    entities: [Knesset, Faction, Mk],
+    entities: [Knesset, Faction, Mk, VoteResultType],
     synchronize: true,
     logging: false,
 })
@@ -72,6 +73,16 @@ AppDataSource.initialize().then(async ()=>{
         mk.id = normalizedMk.id;
         mkRepo.save(mk);
         
+    }
+
+    const cmbVoteResultTypes = cmbData.VoteResultTypes;
+    const voteResultTypeRepo = AppDataSource.getRepository(VoteResultType);
+
+    for (let cmbVoteResultType of cmbVoteResultTypes) {
+        let voteResultType = new VoteResultType();
+        voteResultType.id = cmbVoteResultType.ID;
+        voteResultType.name = cmbVoteResultType.Title;
+        voteResultTypeRepo.save(voteResultType);
     }
 
 })
