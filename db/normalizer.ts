@@ -20,6 +20,7 @@ const AppDataSource = new DataSource({
     database: "kapi",
     entities: [Knesset, Faction, Mk, VoteResultType, Vote],
     synchronize: true,
+    dropSchema: true,
     logging: false,
 })
 
@@ -89,6 +90,37 @@ AppDataSource.initialize().then(async ()=>{
         voteResultTypeRepo.save(voteResultType);
     }
 
-    const scrapDataPath = path.join(__dirname, '..', '')
+    const scrapDataPath = path.join(__dirname, '..', 'scraper', 'scrap_data');
+    const scrapDataJsons = fs.readdirSync(scrapDataPath);
+    const voteJsonPaths = scrapDataJsons.filter(filename=>/^\d+\.json/.test(filename));
+    console.log(voteJsonPaths)
+    console.log('Got all vote paths, parsing...');
+    const voteRepo = AppDataSource.getRepository(Vote);
+    for (let filename of voteJsonPaths) {
+        const text = fs.readFileSync(path.join(scrapDataPath, filename), 'utf-8');
+        const siteVote = JSON.parse(text);
+        const vote = new Vote();
+        const id = Number(filename.split('.')[0])
+        if (!id) {
+            // TODO: ask Shoval about better solution
+            continue
+        }
+        vote.id = id;
+        vote.next = siteVote.NextAndPrevVotes[0].NextVote;
+        vote.prev = siteVote.NextAndPrevVotes[0].PrevVote;
+        if (siteVote.VoteHeader[0]) {
+            vote.protocol = siteVote.VoteHeader[0].ProtocolNo;
+            const knessetId = siteVote.VoteHeader[0].ProtocolNo;
+            const knesset = await knessetRepo.findOneBy({id: knessetId});
+            if (!knesset) {
+                throw new Error(`Knesset with ID ${knessetId} not found`);
+            }
+            vote.knesset = knesset;
+        }
+
+        voteRepo.save(vote);
+        console.log(`Parsed vote ${vote.id}`);
+
+    }
 
 })
