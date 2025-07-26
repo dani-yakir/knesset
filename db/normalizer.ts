@@ -1,9 +1,13 @@
 import "reflect-metadata"
+import * as fs from 'fs';
+import * as path from 'path';
+
 import { DataSource, In } from "typeorm"
 import { Knesset } from "./models/knesset"
 import { Faction } from "./models/faction"
 import { Mk } from "./models/mk"
 import { VoteResultType } from "./models/vote_result_type"
+import { Vote } from "./models/vote";
 import cmbData from "../scraper/scrap_data/GetVotesCmbData.json"
 
 
@@ -14,7 +18,7 @@ const AppDataSource = new DataSource({
     username: "kapi",
     password: "kapi",
     database: "kapi",
-    entities: [Knesset, Faction, Mk, VoteResultType],
+    entities: [Knesset, Faction, Mk, VoteResultType, Vote],
     synchronize: true,
     logging: false,
 })
@@ -84,5 +88,7 @@ AppDataSource.initialize().then(async ()=>{
         voteResultType.name = cmbVoteResultType.Title;
         voteResultTypeRepo.save(voteResultType);
     }
+
+    const scrapDataPath = path.join(__dirname, '..', '')
 
 })

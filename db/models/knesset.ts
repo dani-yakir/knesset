@@ -1,5 +1,6 @@
 import { Entity, Column, PrimaryColumn, OneToMany } from 'typeorm';
 import { Faction } from './faction';
+import { Vote } from './vote';
 
 
 @Entity()
@@ -21,4 +22,7 @@ export class Knesset {
 
     @OneToMany(()=>Faction, (faction)=>{faction.knesset})
     factions: Faction[];
+
+    @OneToMany(()=>Vote, (vote)=>{vote.knesset})
+    votes: Vote[];
 }
