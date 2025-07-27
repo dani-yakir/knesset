@@ -10,6 +10,7 @@ import { VoteResultType } from "./models/vote_result_type"
 import { Vote } from "./models/vote";
 import cmbData from "../scraper/scrap_data/GetVotesCmbData.json"
 import { LawItem } from "./models/law_item";
+import { VoteDetail } from "./models/vote_detail";
 
 
 const AppDataSource = new DataSource({
@@ -19,7 +20,7 @@ const AppDataSource = new DataSource({
     username: "kapi",
     password: "kapi",
     database: "kapi",
-    entities: [Knesset, Faction, Mk, VoteResultType, Vote, LawItem],
+    entities: [Knesset, Faction, Mk, VoteResultType, Vote, LawItem, VoteDetail],
     synchronize: true,
     dropSchema: true,
     logging: false,
@@ -98,6 +99,13 @@ AppDataSource.initialize().then(async ()=>{
     console.log('Got all vote paths, parsing...');
     const voteRepo = AppDataSource.getRepository(Vote);
     const lawItemRepo = AppDataSource.getRepository(LawItem)
+    const voteDetailRepo = AppDataSource.getRepository(VoteDetail);
+
+    const allKnessets = await knessetRepo.find();
+    const idToKnesset = Object.fromEntries(allKnessets.map(kns=>[kns.id, kns]))
+
+    const idToLawItem: {[key: number] : LawItem} = {};
+
     for (let filename of voteJsonPaths) {
         const text = fs.readFileSync(path.join(scrapDataPath, filename), 'utf-8');
         const siteVote = JSON.parse(text);
@@ -113,8 +121,8 @@ AppDataSource.initialize().then(async ()=>{
         vote.prev = siteVote.NextAndPrevVotes[0].PrevVote;
         if (siteVote.VoteHeader[0]) {
             vote.protocol = siteVote.VoteHeader[0].ProtocolNo;
-            const knessetId = siteVote.VoteHeader[0].ProtocolNo;
-            const knesset = await knessetRepo.findOneBy({id: knessetId});
+            const knessetId = siteVote.VoteHeader[0].FK_Knesset;
+            const knesset = idToKnesset[knessetId]
             if (!knesset) {
                 throw new Error(`Knesset with ID ${knessetId} not found`);
             }
@@ -125,20 +133,38 @@ AppDataSource.initialize().then(async ()=>{
             const lawItemId = siteVote.VoteHeader[0].FK_ItemID;
 
             // get from db
-            let lawItem = await lawItemRepo.findOneBy({id: lawItemId});
+            let lawItem = idToLawItem[lawItemId];
             if (!lawItem) {
                 lawItem = new LawItem();
                 lawItem.id = lawItemId;
                 lawItem.title = lawItemTitle;
-                await lawItemRepo.save(lawItem)
+                await lawItemRepo.save(lawItem);
+                idToLawItem[lawItemId] = lawItem;
             }
 
             vote.law_item = lawItem;
-
-
+            
+            
+            
         }
-
+        
         await voteRepo.save(vote);
+        
+        const allVoteResultTypes = await voteResultTypeRepo.find();
+        const idToVoteResult = Object.fromEntries(allVoteResultTypes.map(vrt=>[vrt.id, vrt]))
+        for (let siteVoteDetail of siteVote.VoteDetails) {
+            let voteDetail = new VoteDetail();
+            voteDetail.mk_name = siteVoteDetail.MkName;
+
+            const voteResultType = idToVoteResult[siteVoteDetail.VoteResultId];
+            if (!voteResultType) {
+                throw new Error(`No vote result type ${siteVoteDetail.VoteResultId} in vote ${vote.id}`)
+            }
+            voteDetail.vote_result_type = voteResultType;
+            voteDetail.faction_name = siteVoteDetail.FactionName;
+            voteDetail.vote = vote;
+            await voteDetailRepo.save(voteDetail);
+        }
         
 
     }
