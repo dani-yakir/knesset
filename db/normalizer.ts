@@ -9,6 +9,7 @@ import { Mk } from "./models/mk"
 import { VoteResultType } from "./models/vote_result_type"
 import { Vote } from "./models/vote";
 import cmbData from "../scraper/scrap_data/GetVotesCmbData.json"
+import { LawItem } from "./models/law_item";
 
 
 const AppDataSource = new DataSource({
@@ -18,7 +19,7 @@ const AppDataSource = new DataSource({
     username: "kapi",
     password: "kapi",
     database: "kapi",
-    entities: [Knesset, Faction, Mk, VoteResultType, Vote],
+    entities: [Knesset, Faction, Mk, VoteResultType, Vote, LawItem],
     synchronize: true,
     dropSchema: true,
     logging: false,
@@ -76,7 +77,7 @@ AppDataSource.initialize().then(async ()=>{
         mk.name = name;
         mk.factions = factions;
         mk.id = normalizedMk.id;
-        mkRepo.save(mk);
+        await mkRepo.save(mk);
         
     }
 
@@ -87,7 +88,7 @@ AppDataSource.initialize().then(async ()=>{
         let voteResultType = new VoteResultType();
         voteResultType.id = cmbVoteResultType.ID;
         voteResultType.name = cmbVoteResultType.Title;
-        voteResultTypeRepo.save(voteResultType);
+        await voteResultTypeRepo.save(voteResultType);
     }
 
     const scrapDataPath = path.join(__dirname, '..', 'scraper', 'scrap_data');
@@ -96,6 +97,7 @@ AppDataSource.initialize().then(async ()=>{
     console.log(voteJsonPaths)
     console.log('Got all vote paths, parsing...');
     const voteRepo = AppDataSource.getRepository(Vote);
+    const lawItemRepo = AppDataSource.getRepository(LawItem)
     for (let filename of voteJsonPaths) {
         const text = fs.readFileSync(path.join(scrapDataPath, filename), 'utf-8');
         const siteVote = JSON.parse(text);
@@ -106,6 +108,7 @@ AppDataSource.initialize().then(async ()=>{
             continue
         }
         vote.id = id;
+        console.log(`Parsing vote ${vote.id}`);
         vote.next = siteVote.NextAndPrevVotes[0].NextVote;
         vote.prev = siteVote.NextAndPrevVotes[0].PrevVote;
         if (siteVote.VoteHeader[0]) {
@@ -116,10 +119,27 @@ AppDataSource.initialize().then(async ()=>{
                 throw new Error(`Knesset with ID ${knessetId} not found`);
             }
             vote.knesset = knesset;
+
+            // handle lawItems
+            const lawItemTitle = siteVote.VoteHeader[0].ItemTitle;
+            const lawItemId = siteVote.VoteHeader[0].FK_ItemID;
+
+            // get from db
+            let lawItem = await lawItemRepo.findOneBy({id: lawItemId});
+            if (!lawItem) {
+                lawItem = new LawItem();
+                lawItem.id = lawItemId;
+                lawItem.title = lawItemTitle;
+                await lawItemRepo.save(lawItem)
+            }
+
+            vote.law_item = lawItem;
+
+
         }
 
-        voteRepo.save(vote);
-        console.log(`Parsed vote ${vote.id}`);
+        await voteRepo.save(vote);
+        
 
     }
 
