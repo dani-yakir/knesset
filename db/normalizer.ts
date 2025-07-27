@@ -120,12 +120,9 @@ AppDataSource.initialize().then(async ()=>{
         vote.next = siteVote.NextAndPrevVotes[0].NextVote;
         vote.prev = siteVote.NextAndPrevVotes[0].PrevVote;
         if (siteVote.VoteHeader[0]) {
-            vote.protocol = siteVote.VoteHeader[0].ProtocolNo;
+            vote.protocol = siteVote.VoteHeader[0].VoteProtocolNo;
             const knessetId = siteVote.VoteHeader[0].FK_Knesset;
             const knesset = idToKnesset[knessetId]
-            if (!knesset) {
-                throw new Error(`Knesset with ID ${knessetId} not found`);
-            }
             vote.knesset = knesset;
 
             // handle lawItems

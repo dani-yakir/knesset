@@ -19,7 +19,7 @@ export class Vote {
     @Column({ nullable: true })
     prev?: number;
 
-    @ManyToOne(()=>Knesset, (knesset)=>knesset.votes)
+    @ManyToOne(()=>Knesset, (knesset)=>knesset.votes, {nullable: true})
     knesset?: Knesset;
 
     @ManyToOne(()=>LawItem, law_item=>law_item.votes, {nullable: true})
