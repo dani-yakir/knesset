@@ -124,11 +124,11 @@ AppDataSource.initialize().then(async ()=>{
             const knessetId = siteVote.VoteHeader[0].FK_Knesset;
             const knesset = idToKnesset[knessetId]
             vote.knesset = knesset;
-
+            
             // handle lawItems
             const lawItemTitle = siteVote.VoteHeader[0].ItemTitle;
             const lawItemId = siteVote.VoteHeader[0].FK_ItemID;
-
+            
             // get from db
             let lawItem = idToLawItem[lawItemId];
             if (!lawItem) {
@@ -138,7 +138,8 @@ AppDataSource.initialize().then(async ()=>{
                 await lawItemRepo.save(lawItem);
                 idToLawItem[lawItemId] = lawItem;
             }
-
+            
+            vote.date = siteVote.VoteHeader[0].VoteDate
             vote.law_item = lawItem;
             
             

@@ -27,4 +27,7 @@ export class Vote {
 
     @OneToMany(()=>VoteDetail, vote_detail=>vote_detail.vote, {nullable: true, cascade: true})
     vote_details?: VoteDetail[];
+
+    @Column({ nullable: true })
+    date: Date;
 }
