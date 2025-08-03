@@ -1,3 +1,4 @@
 scrap_data
 node_modules
+.env
 db/**/*.js
