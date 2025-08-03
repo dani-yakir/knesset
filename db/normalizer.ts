@@ -154,7 +154,7 @@ AppDataSource.initialize().then(async ()=>{
             vote.date = siteVote.VoteHeader[0].VoteDate;
             vote.law_item = lawItem;
             vote.chairman = siteVote.VoteHeader[0].ChairmanName;
-            vote.accepted = siteVote.VoteHeader[0].IsForAccepted;
+            
             for (let counter of siteVote.VoteCounters) {
                 let count = counter.countOfResult;
                 switch(counter.Title) {
