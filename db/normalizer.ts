@@ -1,6 +1,8 @@
 import "reflect-metadata"
 import * as fs from 'fs';
 import * as path from 'path';
+import dotenv from 'dotenv';
+dotenv.config();
 
 import { DataSource, In } from "typeorm"
 import { Knesset } from "./models/knesset"
@@ -12,14 +14,15 @@ import cmbData from "../scraper/scrap_data/GetVotesCmbData.json"
 import { LawItem } from "./models/law_item";
 import { VoteDetail } from "./models/vote_detail";
 
+console.log(process.env.USERNAME)
 
 const AppDataSource = new DataSource({
     type: "postgres",
     host: "localhost",
-    port: 5432,
-    username: "kapi",
-    password: "kapi",
-    database: "kapi",
+    port: parseInt(process.env.PORT!),
+    username: process.env.DB_USERNAME,
+    password: process.env.PASSWORD,
+    database: process.env.DATABASE,
     entities: [Knesset, Faction, Mk, VoteResultType, Vote, LawItem, VoteDetail],
     synchronize: true,
     dropSchema: true,
