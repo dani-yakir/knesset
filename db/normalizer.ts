@@ -14,19 +14,28 @@ import cmbData from "../scraper/scrap_data/GetVotesCmbData.json"
 import { LawItem } from "./models/law_item";
 import { VoteDetail } from "./models/vote_detail";
 
+const AppDataSource = process.env.DB_TYPE == 'postgres' ? 
 
-const AppDataSource = new DataSource({
-    type: "postgres",
-    host: "localhost",
-    port: parseInt(process.env.PORT!),
-    username: process.env.DB_USERNAME,
-    password: process.env.PASSWORD,
-    database: process.env.DATABASE,
-    entities: [Knesset, Faction, Mk, VoteResultType, Vote, LawItem, VoteDetail],
-    synchronize: true,
-    dropSchema: true,
-    logging: false,
-})
+    new DataSource({
+        type: "postgres",
+        host: "localhost",
+        port: parseInt(process.env.PORT!),
+        username: process.env.DB_USERNAME,
+        password: process.env.PASSWORD,
+        database: process.env.DATABASE,
+        entities: [Knesset, Faction, Mk, VoteResultType, Vote, LawItem, VoteDetail],
+        synchronize: true,
+        dropSchema: true,
+        logging: false,
+    }) : 
+
+    new DataSource({
+        type: "sqlite",
+        database: "database.sqlite", // Path to your SQLite database file
+        entities: [Knesset, Faction, Mk, VoteResultType, Vote, LawItem, VoteDetail],
+        synchronize: true, // For development, be cautious in production
+        logging: false,
+    })
 
 AppDataSource.initialize().then(async ()=>{
     // normalize Knessets
