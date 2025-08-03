@@ -1,5 +1,6 @@
 scrap_data
 node_modules
 .env
-.sqlite
+*.sqlite
+*.sqlite-journal
 db/**/*.js
