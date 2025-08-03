@@ -35,6 +35,7 @@ const AppDataSource = process.env.DB_TYPE == 'postgres' ?
         entities: [Knesset, Faction, Mk, VoteResultType, Vote, LawItem, VoteDetail],
         synchronize: true, // For development, be cautious in production
         logging: false,
+        dropSchema: true,
     })
 
 AppDataSource.initialize().then(async ()=>{
@@ -150,10 +151,27 @@ AppDataSource.initialize().then(async ()=>{
                 idToLawItem[lawItemId] = lawItem;
             }
             
-            vote.date = siteVote.VoteHeader[0].VoteDate
+            vote.date = siteVote.VoteHeader[0].VoteDate;
             vote.law_item = lawItem;
-            
-            
+            vote.chairman = siteVote.VoteHeader[0].ChairmanName;
+            vote.accepted = siteVote.VoteHeader[0].IsForAccepted;
+            for (let counter of siteVote.VoteCounters) {
+                let count = counter.countOfResult;
+                switch(counter.Title) {
+                    case 'בעד':
+                        vote.for = count;
+                        break;
+                    case 'נגד':
+                        vote.against = count;
+                        break;
+                    case 'נמנע':
+                        vote.withheld = count;
+                        break;
+                    case 'נוכח ולא הצביע':
+                        vote.abstained = count;
+                        break;
+                }
+            }
             
         }
         

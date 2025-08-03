@@ -25,6 +25,28 @@ export class Vote {
     @ManyToOne(()=>LawItem, law_item=>law_item.votes, {nullable: true})
     law_item?: LawItem
 
+    @Column({nullable: true})
+    chairman?: string;
+
+    @Column({nullable: true})
+    accepted?: boolean;
+
+    @Column({nullable: true})
+    // בעד
+    for?: number;
+
+    @Column({nullable: true})
+    // נגד
+    against?: number;
+
+    @Column({nullable: true})
+    // נכח ולא הצביע
+    abstained?: number;
+
+    @Column({nullable: true})
+    // נמנע
+    withheld?: number;
+
     @OneToMany(()=>VoteDetail, vote_detail=>vote_detail.vote, {nullable: true, cascade: true})
     vote_details?: VoteDetail[];
 
