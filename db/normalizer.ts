@@ -14,7 +14,6 @@ import cmbData from "../scraper/scrap_data/GetVotesCmbData.json"
 import { LawItem } from "./models/law_item";
 import { VoteDetail } from "./models/vote_detail";
 
-console.log(process.env.USERNAME)
 
 const AppDataSource = new DataSource({
     type: "postgres",
